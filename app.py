@@ -2322,8 +2322,8 @@ with tab_government:
     st.subheader("🏛️ Government Jobs")
 
     st.write(
-        "Find government vacancies based on your resume, "
-        "education qualification and skills."
+        "Find government job opportunities based on "
+        "your educational qualification."
     )
 
     # -----------------------------------------------------
@@ -2333,8 +2333,8 @@ with tab_government:
     if not st.session_state.get("resume_text"):
 
         st.warning(
-            "📄 Please upload your resume first to find "
-            "government jobs matching your qualification."
+            "📄 Please upload your resume first "
+            "to find suitable government jobs."
         )
 
     else:
@@ -2352,372 +2352,542 @@ with tab_government:
         ):
 
             with st.spinner(
-                "🏛️ Fetching current government vacancies..."
+                "🤖 Analyzing your educational qualification..."
             ):
 
                 try:
 
                     # =============================================
-                    # EMPLOYMENT NEWS
+                    # GOVERNMENT JOB DATABASE
                     # =============================================
 
-                    government_url = (
-                        "https://employmentnews.gov.in/"
-                        "newemp/AllJobs.aspx?k=All"
-                    )
+                    government_jobs = [
 
-                    response = requests.get(
-                        government_url,
-                        timeout=30,
-                        headers={
-                            "User-Agent":
-                            "Mozilla/5.0"
+                        # -----------------------------------------
+                        # 10TH LEVEL
+                        # -----------------------------------------
+
+                        {
+                            "education": "10th Pass",
+                            "category": "SSC",
+                            "organization": "Staff Selection Commission",
+                            "role": "Multi Tasking Staff (MTS)",
+                            "work": (
+                                "Office support, records, files, "
+                                "basic departmental and general "
+                                "government duties."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "10th Pass",
+                            "url": "https://ssc.gov.in/"
+                        },
+
+                        {
+                            "education": "10th Pass",
+                            "category": "RRB",
+                            "organization": "Railway Recruitment Board",
+                            "role": "Level-1 Railway Posts",
+                            "work": (
+                                "Railway maintenance, station support, "
+                                "track-related and other Level-1 duties."
+                            ),
+                            "location": "Various Railway Zones across India",
+                            "qualification": "10th Pass / as specified in notification",
+                            "url": "https://www.rrbapply.gov.in/"
+                        },
+
+                        {
+                            "education": "10th Pass",
+                            "category": "India Post",
+                            "organization": "Department of Posts",
+                            "role": "Gramin Dak Sevak (GDS)",
+                            "work": (
+                                "Postal delivery, customer service, "
+                                "branch post office and related duties."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "10th Pass",
+                            "url": "https://indiapostgdsonline.gov.in/"
+                        },
+
+                        # -----------------------------------------
+                        # 12TH LEVEL
+                        # -----------------------------------------
+
+                        {
+                            "education": "12th Pass",
+                            "category": "SSC",
+                            "organization": "Staff Selection Commission",
+                            "role": "CHSL - LDC / JSA / DEO",
+                            "work": (
+                                "Clerical work, data entry, documentation, "
+                                "office records and government administration."
+                            ),
+                            "location": "Various Central Government offices",
+                            "qualification": "12th Pass",
+                            "url": "https://ssc.gov.in/"
+                        },
+
+                        {
+                            "education": "12th Pass",
+                            "category": "RRB",
+                            "organization": "Railway Recruitment Board",
+                            "role": "NTPC Undergraduate Posts",
+                            "work": (
+                                "Railway commercial, clerical, "
+                                "ticketing and office-related activities."
+                            ),
+                            "location": "Various Railway Zones across India",
+                            "qualification": "12th Pass / as specified in notification",
+                            "url": "https://www.rrbapply.gov.in/"
+                        },
+
+                        {
+                            "education": "12th Pass",
+                            "category": "Defence",
+                            "organization": "Indian Army / Defence",
+                            "role": "Various 12th-level Defence Entries",
+                            "work": (
+                                "Defence, technical and support duties "
+                                "depending on the recruitment."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "12th Pass / stream-specific",
+                            "url": "https://joinindianarmy.nic.in/"
+                        },
+
+                        # -----------------------------------------
+                        # DIPLOMA LEVEL
+                        # -----------------------------------------
+
+                        {
+                            "education": "Diploma",
+                            "category": "RRB",
+                            "organization": "Railway Recruitment Board",
+                            "role": "Junior Engineer (JE)",
+                            "work": (
+                                "Technical and engineering-related "
+                                "work in railway departments."
+                            ),
+                            "location": "Various Railway Zones across India",
+                            "qualification": "Diploma / Degree depending on discipline",
+                            "url": "https://www.rrbapply.gov.in/"
+                        },
+
+                        {
+                            "education": "Diploma",
+                            "category": "PSU",
+                            "organization": "Public Sector Undertakings",
+                            "role": "Technician / Technical Assistant",
+                            "work": (
+                                "Technical maintenance, equipment handling, "
+                                "operations and engineering support."
+                            ),
+                            "location": "Depends on organization",
+                            "qualification": "Relevant Diploma / technical qualification",
+                            "url": "https://employmentnews.gov.in/"
+                        },
+
+                        {
+                            "education": "Diploma",
+                            "category": "State Government",
+                            "organization": "State Government Departments",
+                            "role": "Junior Technical / Engineering Posts",
+                            "work": (
+                                "Technical support, engineering operations, "
+                                "maintenance and departmental work."
+                            ),
+                            "location": "Various locations within the state",
+                            "qualification": "Relevant Diploma",
+                            "url": "https://employmentnews.gov.in/"
+                        },
+
+                        # -----------------------------------------
+                        # DEGREE LEVEL
+                        # -----------------------------------------
+
+                        {
+                            "education": "Degree",
+                            "category": "SSC",
+                            "organization": "Staff Selection Commission",
+                            "role": "SSC CGL Posts",
+                            "work": (
+                                "Government administration, taxation, "
+                                "accounts, auditing and departmental work."
+                            ),
+                            "location": "Various Central Government offices",
+                            "qualification": "Bachelor's Degree",
+                            "url": "https://ssc.gov.in/"
+                        },
+
+                        {
+                            "education": "Degree",
+                            "category": "RRB",
+                            "organization": "Railway Recruitment Board",
+                            "role": "NTPC Graduate Posts",
+                            "work": (
+                                "Railway operations, administration, "
+                                "commercial and office-related activities."
+                            ),
+                            "location": "Various Railway Zones across India",
+                            "qualification": "Bachelor's Degree / post-specific requirements",
+                            "url": "https://www.rrbapply.gov.in/"
+                        },
+
+                        {
+                            "education": "Degree",
+                            "category": "Banking",
+                            "organization": "IBPS / Public Sector Banks",
+                            "role": "Probationary Officer / Clerk",
+                            "work": (
+                                "Banking operations, customer service, "
+                                "financial services and administration."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "Bachelor's Degree",
+                            "url": "https://www.ibps.in/"
+                        },
+
+                        {
+                            "education": "Degree",
+                            "category": "UPSC",
+                            "organization": "Union Public Service Commission",
+                            "role": "Civil Services / Other Graduate Posts",
+                            "work": (
+                                "Administrative, government and specialist "
+                                "services depending on examination."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "Bachelor's Degree / post-specific",
+                            "url": "https://www.upsc.gov.in/"
+                        },
+
+                        # -----------------------------------------
+                        # B.TECH / ENGINEERING
+                        # -----------------------------------------
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "RRB",
+                            "organization": "Railway Recruitment Board",
+                            "role": "Junior Engineer / Technical Posts",
+                            "work": (
+                                "Engineering, railway infrastructure, "
+                                "technical operations and maintenance."
+                            ),
+                            "location": "Various Railway Zones across India",
+                            "qualification": "Diploma / B.Tech depending on discipline",
+                            "url": "https://www.rrbapply.gov.in/"
+                        },
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "PSU",
+                            "organization": "Public Sector Undertakings",
+                            "role": "Engineer / Graduate Engineer Trainee",
+                            "work": (
+                                "Engineering, technology, operations, "
+                                "projects and technical development."
+                            ),
+                            "location": "Depends on organization",
+                            "qualification": "B.E. / B.Tech in relevant discipline",
+                            "url": "https://employmentnews.gov.in/"
+                        },
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "DRDO",
+                            "organization": "Defence Research and Development Organisation",
+                            "role": "Scientist / Technical Posts",
+                            "work": (
+                                "Defence research, engineering, software, "
+                                "technology and technical development."
+                            ),
+                            "location": "Various DRDO laboratories across India",
+                            "qualification": "B.Tech / relevant engineering qualification",
+                            "url": "https://www.drdo.gov.in/"
+                        },
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "ISRO",
+                            "organization": "Indian Space Research Organisation",
+                            "role": "Scientist / Engineer",
+                            "work": (
+                                "Space technology, software, engineering, "
+                                "data processing and research."
+                            ),
+                            "location": "Various ISRO centres across India",
+                            "qualification": "B.Tech / relevant engineering degree",
+                            "url": "https://www.isro.gov.in/"
+                        },
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "NIC",
+                            "organization": "National Informatics Centre",
+                            "role": "Scientist / Technical Officer",
+                            "work": (
+                                "Government software, e-governance, "
+                                "IT infrastructure and digital services."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "Relevant engineering / technical degree",
+                            "url": "https://www.nic.gov.in/"
+                        },
+
+                        {
+                            "education": "B.Tech / Engineering",
+                            "category": "UPSC",
+                            "organization": "Union Public Service Commission",
+                            "role": "Engineering / Technical Services",
+                            "work": (
+                                "Engineering and technical services "
+                                "within Central Government departments."
+                            ),
+                            "location": "Various locations across India",
+                            "qualification": "Engineering degree / post-specific",
+                            "url": "https://www.upsc.gov.in/"
                         }
+
+                    ]
+
+                    # =============================================
+                    # IDENTIFY CANDIDATE EDUCATION LEVEL
+                    # =============================================
+
+                    education_prompt = f"""
+Analyze this candidate's resume.
+
+RESUME:
+{resume_text[:12000]}
+
+Identify the HIGHEST COMPLETED EDUCATIONAL
+QUALIFICATION.
+
+Choose ONLY ONE:
+
+10th Pass
+12th Pass
+Diploma
+Degree
+B.Tech / Engineering
+
+IMPORTANT:
+- If the candidate is currently studying B.Tech but
+  has not completed it, still identify them as
+  "B.Tech / Engineering" for job discovery,
+  but actual eligibility must be verified from the
+  recruitment notification.
+- Do not consider certificates as a degree.
+- Return ONLY ONE option.
+"""
+
+                    education_response = generate_ai(
+                        education_prompt
                     )
 
-                    response.raise_for_status()
-
-                    # =============================================
-                    # READ GOVERNMENT JOB TABLE
-                    # =============================================
-
-                    tables = pd.read_html(
-                        response.text
+                    education_level = (
+                        education_response
+                        .strip()
+                        .upper()
                     )
 
-                    government_jobs = []
-
-                    for table in tables:
-
-                        if table.empty:
-                            continue
-
-                        # Convert everything to string
-                        table = table.astype(str)
-
-                        # We need a table containing
-                        # ORGANISATION / POST
-                        column_text = " ".join(
-                            str(col).upper()
-                            for col in table.columns
-                        )
-
-                        table_text = " ".join(
-                            table.astype(str)
-                            .head(2)
-                            .values
-                            .flatten()
-                        ).upper()
-
-                        if (
-                            "ORGANISATION" not in column_text
-                            and "ORGANIZATION" not in column_text
-                            and "ORGANISATION" not in table_text
-                        ):
-                            continue
-
-                        # =========================================
-                        # PROCESS ROWS
-                        # =========================================
-
-                        for _, row in table.iterrows():
-
-                            values = [
-                                str(value).strip()
-                                for value in row.tolist()
-                            ]
-
-                            if len(values) < 4:
-                                continue
-
-                            # Remove NaN-like values
-                            values = [
-                                ""
-                                if value.lower() == "nan"
-                                else value
-                                for value in values
-                            ]
-
-                            # Skip header
-                            joined = " ".join(
-                                values
-                            ).upper()
-
-                            if (
-                                "ORGANISATION" in joined
-                                and "POST" in joined
-                            ):
-                                continue
-
-                            # =====================================
-                            # CURRENT EMPLOYMENT NEWS TABLE FORMAT
-                            #
-                            # ISSUED DATE
-                            # ORGANISATION
-                            # POST
-                            # METHOD
-                            # LAST DATE
-                            # =====================================
-
-                            if len(values) >= 5:
-
-                                issued_date = values[0]
-                                organization = values[1]
-                                title = values[2]
-                                method = values[3]
-                                last_date = values[4]
-
-                            else:
-
-                                issued_date = ""
-                                organization = values[0]
-                                title = values[1]
-                                method = values[2]
-                                last_date = values[3]
-
-                            # Skip invalid rows
-                            if (
-                                not organization
-                                or not title
-                            ):
-                                continue
-
-                            if (
-                                organization.lower()
-                                in [
-                                    "organisation",
-                                    "organization"
-                                ]
-                            ):
-                                continue
-
-                            government_jobs.append(
-                                {
-                                    "title": title,
-                                    "organization":
-                                        organization,
-                                    "method": method,
-                                    "last_date":
-                                        last_date,
-                                    "issued_date":
-                                        issued_date,
-                                    "url":
-                                        government_url
-                                }
-                            )
-
                     # =============================================
-                    # REMOVE DUPLICATES
+                    # NORMALIZE GEMINI RESPONSE
                     # =============================================
 
-                    unique_jobs = []
+                    if "B.TECH" in education_level:
 
-                    seen = set()
+                        candidate_level = "B.Tech / Engineering"
 
-                    for job in government_jobs:
+                    elif "ENGINEERING" in education_level:
 
-                        key = (
-                            job["organization"],
-                            job["title"],
-                            job["last_date"]
-                        )
+                        candidate_level = "B.Tech / Engineering"
 
-                        if key not in seen:
+                    elif "DIPLOMA" in education_level:
 
-                            seen.add(key)
+                        candidate_level = "Diploma"
 
-                            unique_jobs.append(job)
+                    elif "12TH" in education_level:
 
-                    government_jobs = unique_jobs
+                        candidate_level = "12th Pass"
 
-                    # =============================================
-                    # CHECK RESULTS
-                    # =============================================
+                    elif "DEGREE" in education_level:
 
-                    if not government_jobs:
+                        candidate_level = "Degree"
 
-                        st.error(
-                            "Government jobs were found on "
-                            "Employment News, but the app could "
-                            "not read the vacancy table."
-                        )
+                    elif "10TH" in education_level:
 
-                        st.link_button(
-                            "🏛️ Open Employment News",
-                            government_url,
-                            use_container_width=True
-                        )
+                        candidate_level = "10th Pass"
 
                     else:
 
-                        # Keep first 20 current listings
-                        government_jobs = (
-                            government_jobs[:20]
-                        )
+                        candidate_level = "Degree"
 
-                        st.success(
-                            f"✅ Retrieved "
-                            f"{len(government_jobs)} "
-                            "government vacancies."
-                        )
+                    # =============================================
+                    # EDUCATION HIERARCHY
+                    # =============================================
 
-                        # =========================================
-                        # AI MATCHING
-                        # =========================================
+                    education_order = {
+                        "10th Pass": 1,
+                        "12th Pass": 2,
+                        "Diploma": 3,
+                        "Degree": 4,
+                        "B.Tech / Engineering": 5
+                    }
 
-                        st.write(
-                            "🤖 Checking your resume against "
-                            "the government vacancies..."
-                        )
+                    candidate_rank = education_order[
+                        candidate_level
+                    ]
 
-                        matched_jobs = []
+                    # =============================================
+                    # SHOW JOBS SUITABLE FOR LEVEL
+                    #
+                    # Example:
+                    # B.Tech candidate can see:
+                    # B.Tech + Degree + 12th + 10th jobs
+                    #
+                    # But we will prioritize higher-level jobs.
+                    # =============================================
 
-                        progress = st.progress(0)
+                    matched_jobs = []
 
-                        total = len(
-                            government_jobs
-                        )
+                    for job in government_jobs:
 
-                        for index, job in enumerate(
-                            government_jobs,
-                            start=1
-                        ):
+                        job_rank = education_order[
+                            job["education"]
+                        ]
 
-                            prompt = f"""
-You are a government recruitment
-eligibility matching assistant.
-
-CANDIDATE RESUME:
-{resume_text[:12000]}
-
-GOVERNMENT VACANCY:
-
-Organization:
-{job["organization"]}
-
-Post:
-{job["title"]}
-
-Method of Appointment:
-{job["method"]}
-
-Last Date:
-{job["last_date"]}
-
-Classify this vacancy into exactly ONE category:
-
-EDUCATION MATCH
-SKILL MATCH
-OTHER JOB
-
-Rules:
-
-EDUCATION MATCH:
-Choose this if the candidate's degree,
-branch, educational qualification or
-academic background appears relevant.
-
-SKILL MATCH:
-Choose this if the candidate's technical
-or professional skills appear relevant.
-
-OTHER JOB:
-Choose this if there is not enough evidence
-of an education or skill match.
-
-IMPORTANT:
-Do not invent eligibility requirements.
-
-Return ONLY:
-EDUCATION MATCH
-or
-SKILL MATCH
-or
-OTHER JOB
-"""
-
-                            try:
-
-                                ai_response = generate_ai(
-                                    prompt
-                                )
-
-                                category = (
-                                    ai_response
-                                    .strip()
-                                    .upper()
-                                )
-
-                            except Exception:
-
-                                category = "OTHER JOB"
-
-                            job["match"] = category
+                        if job_rank <= candidate_rank:
 
                             matched_jobs.append(job)
 
-                            progress.progress(
-                                index / total
-                            )
+                    # Put candidate's own level first,
+                    # followed by lower qualification levels.
 
-                        progress.empty()
+                    matched_jobs.sort(
+                        key=lambda job: education_order[
+                            job["education"]
+                        ],
+                        reverse=True
+                    )
 
-                        # Save results
-                        st.session_state[
-                            "government_jobs"
-                        ] = matched_jobs
+                    # Store in session
+                    st.session_state[
+                        "government_jobs"
+                    ] = matched_jobs
+
+                    st.session_state[
+                        "government_education_level"
+                    ] = candidate_level
 
                 except Exception as e:
 
                     st.error(
-                        f"Government job fetch error: {e}"
+                        f"Government job matching error: {e}"
                     )
 
-                    st.info(
-                        "You can still view the current "
-                        "government vacancies directly "
-                        "from Employment News."
-                    )
-
-                    st.link_button(
-                        "🏛️ Open Employment News",
-                        "https://employmentnews.gov.in/"
-                    )
-
-        # -----------------------------------------------------
-        # DISPLAY MATCHED GOVERNMENT JOBS
-        # -----------------------------------------------------
+        # =====================================================
+        # DISPLAY RESULTS
+        # =====================================================
 
         government_jobs = st.session_state.get(
             "government_jobs",
             []
         )
 
+        candidate_level = st.session_state.get(
+            "government_education_level",
+            ""
+        )
+
         if government_jobs:
 
-            # =============================================
-            # EDUCATION MATCH
-            # =============================================
+            st.success(
+                f"🎓 Your education level: "
+                f"{candidate_level}"
+            )
 
-            education_jobs = [
-                job
-                for job in government_jobs
-                if job.get("match")
-                == "EDUCATION MATCH"
+            st.info(
+                "Showing government job categories that "
+                "match your education level or below. "
+                "Always verify the exact eligibility in "
+                "the latest recruitment notification."
+            )
+
+            # =================================================
+            # GROUP BY EDUCATION LEVEL
+            # =================================================
+
+            education_levels = [
+                "B.Tech / Engineering",
+                "Degree",
+                "Diploma",
+                "12th Pass",
+                "10th Pass"
             ]
 
-            if education_jobs:
+            for level in education_levels:
 
-                st.markdown(
-                    "## 🎓 Education / Qualification Match"
-                )
+                level_jobs = [
+                    job
+                    for job in government_jobs
+                    if job["education"] == level
+                ]
 
-                for job in education_jobs:
+                if not level_jobs:
+                    continue
+
+                # ---------------------------------------------
+                # SECTION HEADING
+                # ---------------------------------------------
+
+                if level == "B.Tech / Engineering":
+
+                    st.markdown(
+                        "## 🎓 B.Tech / Engineering Level"
+                    )
+
+                elif level == "Degree":
+
+                    st.markdown(
+                        "## 🎓 Degree Level"
+                    )
+
+                elif level == "Diploma":
+
+                    st.markdown(
+                        "## 🔧 Diploma Level"
+                    )
+
+                elif level == "12th Pass":
+
+                    st.markdown(
+                        "## 📚 12th Pass Level"
+                    )
+
+                elif level == "10th Pass":
+
+                    st.markdown(
+                        "## 📝 10th Pass Level"
+                    )
+
+                # ---------------------------------------------
+                # JOB CARDS
+                # ---------------------------------------------
+
+                for job in level_jobs:
 
                     with st.container(border=True):
 
                         st.markdown(
-                            f"### 🏛️ {job['title']}"
+                            f"### 🏛️ {job['role']}"
+                        )
+
+                        st.write(
+                            f"**Job Category:** "
+                            f"{job['category']}"
                         )
 
                         st.write(
@@ -2726,131 +2896,34 @@ OTHER JOB
                         )
 
                         st.write(
-                            f"**Appointment:** "
-                            f"{job['method']}"
+                            f"**Work Details:** "
+                            f"{job['work']}"
                         )
 
                         st.write(
-                            f"**Last Date:** "
-                            f"{job['last_date']}"
+                            f"**Location:** "
+                            f"{job['location']}"
                         )
 
-                        st.success(
-                            "🎓 Your education appears "
-                            "relevant to this vacancy."
+                        st.write(
+                            f"**Education:** "
+                            f"{job['qualification']}"
                         )
 
                         st.link_button(
-                            "🔗 View Official Vacancy",
+                            "🔗 Official Recruitment Website",
                             job["url"],
                             use_container_width=True
                         )
 
-            # =============================================
-            # SKILL MATCH
-            # =============================================
-
-            skill_jobs = [
-                job
-                for job in government_jobs
-                if job.get("match")
-                == "SKILL MATCH"
-            ]
-
-            if skill_jobs:
-
-                st.markdown(
-                    "## 💻 Skill Match"
-                )
-
-                for job in skill_jobs:
-
-                    with st.container(border=True):
-
-                        st.markdown(
-                            f"### 🏛️ {job['title']}"
-                        )
-
-                        st.write(
-                            f"**Organization:** "
-                            f"{job['organization']}"
-                        )
-
-                        st.write(
-                            f"**Appointment:** "
-                            f"{job['method']}"
-                        )
-
-                        st.write(
-                            f"**Last Date:** "
-                            f"{job['last_date']}"
-                        )
-
-                        st.success(
-                            "💻 Your skills appear "
-                            "relevant to this vacancy."
-                        )
-
-                        st.link_button(
-                            "🔗 View Official Vacancy",
-                            job["url"],
-                            use_container_width=True
-                        )
-
-            # =============================================
-            # OTHER JOBS
-            # =============================================
-
-            other_jobs = [
-                job
-                for job in government_jobs
-                if job.get("match")
-                == "OTHER JOB"
-            ]
-
-            if other_jobs:
-
-                st.markdown(
-                    "## 📋 Other Government Jobs"
-                )
-
-                for job in other_jobs:
-
-                    with st.container(border=True):
-
-                        st.markdown(
-                            f"### 🏛️ {job['title']}"
-                        )
-
-                        st.write(
-                            f"**Organization:** "
-                            f"{job['organization']}"
-                        )
-
-                        st.write(
-                            f"**Appointment:** "
-                            f"{job['method']}"
-                        )
-
-                        st.write(
-                            f"**Last Date:** "
-                            f"{job['last_date']}"
-                        )
-
-                        st.link_button(
-                            "🔗 View Official Vacancy",
-                            job["url"],
-                            use_container_width=True
-                        )
-
-        # -----------------------------------------------------
-        # OFFICIAL PORTALS
-        # -----------------------------------------------------
+        # =====================================================
+        # OFFICIAL SOURCES
+        # =====================================================
 
         st.divider()
 
         st.markdown(
-            "## 🇮🇳 Official Government Job Portals"
+            "## 🇮🇳 Official Government Recruitment Sources"
         )
 
         col1, col2, col3 = st.columns(3)
@@ -2858,7 +2931,7 @@ OTHER JOB
         with col1:
 
             st.link_button(
-                "🏛️ Employment News",
+                "📢 Employment News",
                 "https://employmentnews.gov.in/",
                 use_container_width=True
             )
@@ -2866,26 +2939,26 @@ OTHER JOB
         with col2:
 
             st.link_button(
-                "🇮🇳 NCS Government Jobs",
-                "https://www.ncs.gov.in/",
+                "🚆 Railway (RRB)",
+                "https://www.rrbapply.gov.in/",
                 use_container_width=True
             )
 
         with col3:
 
             st.link_button(
-                "📮 India Post",
-                "https://www.indiapost.gov.in/vacancies",
+                "📋 SSC",
+                "https://ssc.gov.in/",
                 use_container_width=True
             )
 
         st.caption(
-            "⚠️ Always verify the complete official "
-            "recruitment notification, qualification, "
-            "age limit, reservation and deadline before "
-            "applying."
+            "⚠️ Job categories are shown for discovery. "
+            "Before applying, verify the latest official "
+            "notification, exact qualification, age limit, "
+            "branch requirements, vacancies, location and "
+            "application deadline."
         )
-
 # =========================================================
 # TAB 3: FREELANCING
 # =========================================================
