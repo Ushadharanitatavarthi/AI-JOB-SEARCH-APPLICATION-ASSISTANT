@@ -2322,7 +2322,7 @@ with tab_government:
     st.subheader("🏛️ Government Jobs")
 
     st.write(
-        "Government vacancies matched with your resume, "
+        "Find government vacancies based on your resume, "
         "education qualification and skills."
     )
 
@@ -2337,17 +2337,12 @@ with tab_government:
             "government jobs matching your qualification."
         )
 
-        st.link_button(
-            "🇮🇳 Open NCS Government Jobs",
-            "https://www.ncs.gov.in/"
-        )
-
     else:
 
         resume_text = st.session_state.resume_text
 
         # -------------------------------------------------
-        # SEARCH GOVERNMENT JOBS
+        # FIND GOVERNMENT JOBS BUTTON
         # -------------------------------------------------
 
         if st.button(
@@ -2357,91 +2352,159 @@ with tab_government:
         ):
 
             with st.spinner(
-                "🤖 Finding government jobs matching your resume..."
+                "🏛️ Fetching current government vacancies..."
             ):
 
                 try:
 
                     # =============================================
-                    # FETCH EMPLOYMENT NEWS
+                    # EMPLOYMENT NEWS
                     # =============================================
 
-                    employment_news_url = (
+                    government_url = (
                         "https://employmentnews.gov.in/"
                         "newemp/AllJobs.aspx?k=All"
                     )
 
-                    news_response = requests.get(
-                        employment_news_url,
-                        timeout=30
+                    response = requests.get(
+                        government_url,
+                        timeout=30,
+                        headers={
+                            "User-Agent":
+                            "Mozilla/5.0"
+                        }
                     )
 
-                    news_response.raise_for_status()
+                    response.raise_for_status()
 
-                    from bs4 import BeautifulSoup
+                    # =============================================
+                    # READ GOVERNMENT JOB TABLE
+                    # =============================================
 
-                    soup = BeautifulSoup(
-                        news_response.text,
-                        "html.parser"
+                    tables = pd.read_html(
+                        response.text
                     )
 
                     government_jobs = []
 
-                    # ---------------------------------------------
-                    # FIND TABLE ROWS
-                    # ---------------------------------------------
+                    for table in tables:
 
-                    for table in soup.find_all("table"):
+                        if table.empty:
+                            continue
 
-                        rows = table.find_all("tr")
+                        # Convert everything to string
+                        table = table.astype(str)
 
-                        for row in rows:
+                        # We need a table containing
+                        # ORGANISATION / POST
+                        column_text = " ".join(
+                            str(col).upper()
+                            for col in table.columns
+                        )
 
-                            cells = row.find_all(
-                                ["td", "th"]
-                            )
+                        table_text = " ".join(
+                            table.astype(str)
+                            .head(2)
+                            .values
+                            .flatten()
+                        ).upper()
+
+                        if (
+                            "ORGANISATION" not in column_text
+                            and "ORGANIZATION" not in column_text
+                            and "ORGANISATION" not in table_text
+                        ):
+                            continue
+
+                        # =========================================
+                        # PROCESS ROWS
+                        # =========================================
+
+                        for _, row in table.iterrows():
 
                             values = [
-                                cell.get_text(
-                                    " ",
-                                    strip=True
-                                )
-                                for cell in cells
+                                str(value).strip()
+                                for value in row.tolist()
                             ]
 
-                            if len(values) >= 4:
+                            if len(values) < 4:
+                                continue
 
+                            # Remove NaN-like values
+                            values = [
+                                ""
+                                if value.lower() == "nan"
+                                else value
+                                for value in values
+                            ]
+
+                            # Skip header
+                            joined = " ".join(
+                                values
+                            ).upper()
+
+                            if (
+                                "ORGANISATION" in joined
+                                and "POST" in joined
+                            ):
+                                continue
+
+                            # =====================================
+                            # CURRENT EMPLOYMENT NEWS TABLE FORMAT
+                            #
+                            # ISSUED DATE
+                            # ORGANISATION
+                            # POST
+                            # METHOD
+                            # LAST DATE
+                            # =====================================
+
+                            if len(values) >= 5:
+
+                                issued_date = values[0]
                                 organization = values[1]
-                                post = values[2]
+                                title = values[2]
                                 method = values[3]
+                                last_date = values[4]
 
-                                last_date = (
-                                    values[4]
-                                    if len(values) >= 5
-                                    else "Not specified"
-                                )
+                            else:
 
-                                # Skip table headers
-                                if (
-                                    organization.upper()
-                                    in [
-                                        "ORGANISATION",
-                                        "ORGANIZATION"
-                                    ]
-                                    or post.upper() == "POST"
-                                ):
-                                    continue
+                                issued_date = ""
+                                organization = values[0]
+                                title = values[1]
+                                method = values[2]
+                                last_date = values[3]
 
-                                government_jobs.append(
-                                    {
-                                        "title": post,
-                                        "organization": organization,
-                                        "method": method,
-                                        "last_date": last_date,
-                                        "source": "Employment News",
-                                        "url": employment_news_url
-                                    }
-                                )
+                            # Skip invalid rows
+                            if (
+                                not organization
+                                or not title
+                            ):
+                                continue
+
+                            if (
+                                organization.lower()
+                                in [
+                                    "organisation",
+                                    "organization"
+                                ]
+                            ):
+                                continue
+
+                            government_jobs.append(
+                                {
+                                    "title": title,
+                                    "organization":
+                                        organization,
+                                    "method": method,
+                                    "last_date":
+                                        last_date,
+                                    "issued_date":
+                                        issued_date,
+                                    "url":
+                                        government_url
+                                }
+                            )
 
                     # =============================================
                     # REMOVE DUPLICATES
@@ -2465,57 +2528,81 @@ with tab_government:
 
                             unique_jobs.append(job)
 
-                    government_jobs = unique_jobs[:25]
+                    government_jobs = unique_jobs
 
                     # =============================================
-                    # IF NOTHING FOUND
+                    # CHECK RESULTS
                     # =============================================
 
                     if not government_jobs:
 
                         st.error(
-                            "No government vacancies could be "
-                            "retrieved right now."
+                            "Government jobs were found on "
+                            "Employment News, but the app could "
+                            "not read the vacancy table."
                         )
 
                         st.link_button(
                             "🏛️ Open Employment News",
-                            employment_news_url
+                            government_url,
+                            use_container_width=True
                         )
 
                     else:
 
-                        # =============================================
+                        # Keep first 20 current listings
+                        government_jobs = (
+                            government_jobs[:20]
+                        )
+
+                        st.success(
+                            f"✅ Retrieved "
+                            f"{len(government_jobs)} "
+                            "government vacancies."
+                        )
+
+                        # =========================================
                         # AI MATCHING
-                        # =============================================
+                        # =========================================
+
+                        st.write(
+                            "🤖 Checking your resume against "
+                            "the government vacancies..."
+                        )
 
                         matched_jobs = []
 
                         progress = st.progress(0)
 
-                        total = min(
-                            len(government_jobs),
-                            15
+                        total = len(
+                            government_jobs
                         )
 
                         for index, job in enumerate(
-                            government_jobs[:15],
+                            government_jobs,
                             start=1
                         ):
 
                             prompt = f"""
-You are a government-job eligibility matching assistant.
-
-Analyze the candidate's resume and the government vacancy.
+You are a government recruitment
+eligibility matching assistant.
 
 CANDIDATE RESUME:
 {resume_text[:12000]}
 
-GOVERNMENT JOB:
-Organization: {job["organization"]}
-Post: {job["title"]}
-Appointment Method: {job["method"]}
-Last Date: {job["last_date"]}
+GOVERNMENT VACANCY:
+
+Organization:
+{job["organization"]}
+
+Post:
+{job["title"]}
+
+Method of Appointment:
+{job["method"]}
+
+Last Date:
+{job["last_date"]}
 
 Classify this vacancy into exactly ONE category:
 
@@ -2526,30 +2613,37 @@ OTHER JOB
 Rules:
 
 EDUCATION MATCH:
-Use this when the candidate's degree,
-branch or educational qualification appears
-relevant to the vacancy.
+Choose this if the candidate's degree,
+branch, educational qualification or
+academic background appears relevant.
 
 SKILL MATCH:
-Use this when the candidate's technical/professional
-skills are relevant, even if the education match
-is not obvious.
+Choose this if the candidate's technical
+or professional skills appear relevant.
 
 OTHER JOB:
-Use this when neither education nor skills appear
-relevant.
+Choose this if there is not enough evidence
+of an education or skill match.
 
-Return ONLY one category.
+IMPORTANT:
+Do not invent eligibility requirements.
+
+Return ONLY:
+EDUCATION MATCH
+or
+SKILL MATCH
+or
+OTHER JOB
 """
 
                             try:
 
-                                ai_result = generate_ai(
+                                ai_response = generate_ai(
                                     prompt
                                 )
 
                                 category = (
-                                    ai_result
+                                    ai_response
                                     .strip()
                                     .upper()
                                 )
@@ -2558,35 +2652,9 @@ Return ONLY one category.
 
                                 category = "OTHER JOB"
 
-                            if (
-                                "EDUCATION MATCH"
-                                in category
-                            ):
+                            job["match"] = category
 
-                                job["match"] = (
-                                    "🎓 Education Match"
-                                )
-
-                                matched_jobs.append(job)
-
-                            elif (
-                                "SKILL MATCH"
-                                in category
-                            ):
-
-                                job["match"] = (
-                                    "💻 Skill Match"
-                                )
-
-                                matched_jobs.append(job)
-
-                            else:
-
-                                job["match"] = (
-                                    "📋 Other Government Job"
-                                )
-
-                                matched_jobs.append(job)
+                            matched_jobs.append(job)
 
                             progress.progress(
                                 index / total
@@ -2594,10 +2662,7 @@ Return ONLY one category.
 
                         progress.empty()
 
-                        # =============================================
-                        # SAVE GOVERNMENT JOBS
-                        # =============================================
-
+                        # Save results
                         st.session_state[
                             "government_jobs"
                         ] = matched_jobs
@@ -2605,11 +2670,22 @@ Return ONLY one category.
                 except Exception as e:
 
                     st.error(
-                        f"Government job search error: {e}"
+                        f"Government job fetch error: {e}"
+                    )
+
+                    st.info(
+                        "You can still view the current "
+                        "government vacancies directly "
+                        "from Employment News."
+                    )
+
+                    st.link_button(
+                        "🏛️ Open Employment News",
+                        "https://employmentnews.gov.in/"
                     )
 
         # -----------------------------------------------------
-        # DISPLAY RESULTS
+        # DISPLAY MATCHED GOVERNMENT JOBS
         # -----------------------------------------------------
 
         government_jobs = st.session_state.get(
@@ -2619,11 +2695,6 @@ Return ONLY one category.
 
         if government_jobs:
 
-            st.success(
-                f"Found {len(government_jobs)} "
-                "government opportunities."
-            )
-
             # =============================================
             # EDUCATION MATCH
             # =============================================
@@ -2631,14 +2702,14 @@ Return ONLY one category.
             education_jobs = [
                 job
                 for job in government_jobs
-                if "Education Match"
-                in job.get("match", "")
+                if job.get("match")
+                == "EDUCATION MATCH"
             ]
 
             if education_jobs:
 
                 st.markdown(
-                    "## 🎓 Education / Eligibility Matches"
+                    "## 🎓 Education / Qualification Match"
                 )
 
                 for job in education_jobs:
@@ -2665,7 +2736,8 @@ Return ONLY one category.
                         )
 
                         st.success(
-                            job["match"]
+                            "🎓 Your education appears "
+                            "relevant to this vacancy."
                         )
 
                         st.link_button(
@@ -2681,14 +2753,14 @@ Return ONLY one category.
             skill_jobs = [
                 job
                 for job in government_jobs
-                if "Skill Match"
-                in job.get("match", "")
+                if job.get("match")
+                == "SKILL MATCH"
             ]
 
             if skill_jobs:
 
                 st.markdown(
-                    "## 💻 Skill Matches"
+                    "## 💻 Skill Match"
                 )
 
                 for job in skill_jobs:
@@ -2715,7 +2787,8 @@ Return ONLY one category.
                         )
 
                         st.success(
-                            job["match"]
+                            "💻 Your skills appear "
+                            "relevant to this vacancy."
                         )
 
                         st.link_button(
@@ -2725,14 +2798,14 @@ Return ONLY one category.
                         )
 
             # =============================================
-            # OTHER GOVERNMENT JOBS
+            # OTHER JOBS
             # =============================================
 
             other_jobs = [
                 job
                 for job in government_jobs
-                if "Other Government Job"
-                in job.get("match", "")
+                if job.get("match")
+                == "OTHER JOB"
             ]
 
             if other_jobs:
@@ -2786,30 +2859,32 @@ Return ONLY one category.
 
             st.link_button(
                 "🏛️ Employment News",
-                "https://employmentnews.gov.in/"
+                "https://employmentnews.gov.in/",
+                use_container_width=True
             )
 
         with col2:
 
             st.link_button(
                 "🇮🇳 NCS Government Jobs",
-                "https://www.ncs.gov.in/"
+                "https://www.ncs.gov.in/",
+                use_container_width=True
             )
 
         with col3:
 
             st.link_button(
                 "📮 India Post",
-                "https://www.indiapost.gov.in/vacancies"
+                "https://www.indiapost.gov.in/vacancies",
+                use_container_width=True
             )
 
         st.caption(
-            "⚠️ Always verify qualification, age, "
-            "reservation, deadline and application "
-            "instructions on the official recruitment "
-            "notification before applying."
+            "⚠️ Always verify the complete official "
+            "recruitment notification, qualification, "
+            "age limit, reservation and deadline before "
+            "applying."
         )
-
 
 # =========================================================
 # TAB 3: FREELANCING
