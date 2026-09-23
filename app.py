@@ -2314,42 +2314,722 @@ OTHER JOB
 
 
 # =========================================================
-# TAB 2 - GOVERNMENT JOBS
+# TAB 2: GOVERNMENT JOBS
 # =========================================================
 
 with tab_government:
 
-    st.subheader(
-        "🏛️ Government Jobs"
-    )
-
-    st.info(
-        "Government job integration is kept separate "
-        "from the private Adzuna search. This section "
-        "can be connected to a government-jobs source "
-        "without changing the private-job functionality."
-    )
+    st.subheader("🏛️ Government Jobs")
 
     st.write(
-        "For now, please use the Private Jobs tab to "
-        "test the deployed AI and job-search features."
+        "Government vacancies matched with your resume, "
+        "education qualification and skills."
     )
+
+    # -----------------------------------------------------
+    # CHECK RESUME
+    # -----------------------------------------------------
+
+    if not st.session_state.get("resume_text"):
+
+        st.warning(
+            "📄 Please upload your resume first to find "
+            "government jobs matching your qualification."
+        )
+
+        st.link_button(
+            "🇮🇳 Open NCS Government Jobs",
+            "https://www.ncs.gov.in/"
+        )
+
+    else:
+
+        resume_text = st.session_state.resume_text
+
+        # -------------------------------------------------
+        # SEARCH GOVERNMENT JOBS
+        # -------------------------------------------------
+
+        if st.button(
+            "🔎 Find Government Jobs For Me",
+            type="primary",
+            use_container_width=True
+        ):
+
+            with st.spinner(
+                "🤖 Finding government jobs matching your resume..."
+            ):
+
+                try:
+
+                    # =============================================
+                    # FETCH EMPLOYMENT NEWS
+                    # =============================================
+
+                    employment_news_url = (
+                        "https://employmentnews.gov.in/"
+                        "newemp/AllJobs.aspx?k=All"
+                    )
+
+                    news_response = requests.get(
+                        employment_news_url,
+                        timeout=30
+                    )
+
+                    news_response.raise_for_status()
+
+                    from bs4 import BeautifulSoup
+
+                    soup = BeautifulSoup(
+                        news_response.text,
+                        "html.parser"
+                    )
+
+                    government_jobs = []
+
+                    # ---------------------------------------------
+                    # FIND TABLE ROWS
+                    # ---------------------------------------------
+
+                    for table in soup.find_all("table"):
+
+                        rows = table.find_all("tr")
+
+                        for row in rows:
+
+                            cells = row.find_all(
+                                ["td", "th"]
+                            )
+
+                            values = [
+                                cell.get_text(
+                                    " ",
+                                    strip=True
+                                )
+                                for cell in cells
+                            ]
+
+                            if len(values) >= 4:
+
+                                organization = values[1]
+                                post = values[2]
+                                method = values[3]
+
+                                last_date = (
+                                    values[4]
+                                    if len(values) >= 5
+                                    else "Not specified"
+                                )
+
+                                # Skip table headers
+                                if (
+                                    organization.upper()
+                                    in [
+                                        "ORGANISATION",
+                                        "ORGANIZATION"
+                                    ]
+                                    or post.upper() == "POST"
+                                ):
+                                    continue
+
+                                government_jobs.append(
+                                    {
+                                        "title": post,
+                                        "organization": organization,
+                                        "method": method,
+                                        "last_date": last_date,
+                                        "source": "Employment News",
+                                        "url": employment_news_url
+                                    }
+                                )
+
+                    # =============================================
+                    # REMOVE DUPLICATES
+                    # =============================================
+
+                    unique_jobs = []
+
+                    seen = set()
+
+                    for job in government_jobs:
+
+                        key = (
+                            job["organization"],
+                            job["title"],
+                            job["last_date"]
+                        )
+
+                        if key not in seen:
+
+                            seen.add(key)
+
+                            unique_jobs.append(job)
+
+                    government_jobs = unique_jobs[:25]
+
+                    # =============================================
+                    # IF NOTHING FOUND
+                    # =============================================
+
+                    if not government_jobs:
+
+                        st.error(
+                            "No government vacancies could be "
+                            "retrieved right now."
+                        )
+
+                        st.link_button(
+                            "🏛️ Open Employment News",
+                            employment_news_url
+                        )
+
+                    else:
+
+                        # =============================================
+                        # AI MATCHING
+                        # =============================================
+
+                        matched_jobs = []
+
+                        progress = st.progress(0)
+
+                        total = min(
+                            len(government_jobs),
+                            15
+                        )
+
+                        for index, job in enumerate(
+                            government_jobs[:15],
+                            start=1
+                        ):
+
+                            prompt = f"""
+You are a government-job eligibility matching assistant.
+
+Analyze the candidate's resume and the government vacancy.
+
+CANDIDATE RESUME:
+{resume_text[:12000]}
+
+GOVERNMENT JOB:
+Organization: {job["organization"]}
+Post: {job["title"]}
+Appointment Method: {job["method"]}
+Last Date: {job["last_date"]}
+
+Classify this vacancy into exactly ONE category:
+
+EDUCATION MATCH
+SKILL MATCH
+OTHER JOB
+
+Rules:
+
+EDUCATION MATCH:
+Use this when the candidate's degree,
+branch or educational qualification appears
+relevant to the vacancy.
+
+SKILL MATCH:
+Use this when the candidate's technical/professional
+skills are relevant, even if the education match
+is not obvious.
+
+OTHER JOB:
+Use this when neither education nor skills appear
+relevant.
+
+Return ONLY one category.
+"""
+
+                            try:
+
+                                ai_result = generate_ai(
+                                    prompt
+                                )
+
+                                category = (
+                                    ai_result
+                                    .strip()
+                                    .upper()
+                                )
+
+                            except Exception:
+
+                                category = "OTHER JOB"
+
+                            if (
+                                "EDUCATION MATCH"
+                                in category
+                            ):
+
+                                job["match"] = (
+                                    "🎓 Education Match"
+                                )
+
+                                matched_jobs.append(job)
+
+                            elif (
+                                "SKILL MATCH"
+                                in category
+                            ):
+
+                                job["match"] = (
+                                    "💻 Skill Match"
+                                )
+
+                                matched_jobs.append(job)
+
+                            else:
+
+                                job["match"] = (
+                                    "📋 Other Government Job"
+                                )
+
+                                matched_jobs.append(job)
+
+                            progress.progress(
+                                index / total
+                            )
+
+                        progress.empty()
+
+                        # =============================================
+                        # SAVE GOVERNMENT JOBS
+                        # =============================================
+
+                        st.session_state[
+                            "government_jobs"
+                        ] = matched_jobs
+
+                except Exception as e:
+
+                    st.error(
+                        f"Government job search error: {e}"
+                    )
+
+        # -----------------------------------------------------
+        # DISPLAY RESULTS
+        # -----------------------------------------------------
+
+        government_jobs = st.session_state.get(
+            "government_jobs",
+            []
+        )
+
+        if government_jobs:
+
+            st.success(
+                f"Found {len(government_jobs)} "
+                "government opportunities."
+            )
+
+            # =============================================
+            # EDUCATION MATCH
+            # =============================================
+
+            education_jobs = [
+                job
+                for job in government_jobs
+                if "Education Match"
+                in job.get("match", "")
+            ]
+
+            if education_jobs:
+
+                st.markdown(
+                    "## 🎓 Education / Eligibility Matches"
+                )
+
+                for job in education_jobs:
+
+                    with st.container(border=True):
+
+                        st.markdown(
+                            f"### 🏛️ {job['title']}"
+                        )
+
+                        st.write(
+                            f"**Organization:** "
+                            f"{job['organization']}"
+                        )
+
+                        st.write(
+                            f"**Appointment:** "
+                            f"{job['method']}"
+                        )
+
+                        st.write(
+                            f"**Last Date:** "
+                            f"{job['last_date']}"
+                        )
+
+                        st.success(
+                            job["match"]
+                        )
+
+                        st.link_button(
+                            "🔗 View Official Vacancy",
+                            job["url"],
+                            use_container_width=True
+                        )
+
+            # =============================================
+            # SKILL MATCH
+            # =============================================
+
+            skill_jobs = [
+                job
+                for job in government_jobs
+                if "Skill Match"
+                in job.get("match", "")
+            ]
+
+            if skill_jobs:
+
+                st.markdown(
+                    "## 💻 Skill Matches"
+                )
+
+                for job in skill_jobs:
+
+                    with st.container(border=True):
+
+                        st.markdown(
+                            f"### 🏛️ {job['title']}"
+                        )
+
+                        st.write(
+                            f"**Organization:** "
+                            f"{job['organization']}"
+                        )
+
+                        st.write(
+                            f"**Appointment:** "
+                            f"{job['method']}"
+                        )
+
+                        st.write(
+                            f"**Last Date:** "
+                            f"{job['last_date']}"
+                        )
+
+                        st.success(
+                            job["match"]
+                        )
+
+                        st.link_button(
+                            "🔗 View Official Vacancy",
+                            job["url"],
+                            use_container_width=True
+                        )
+
+            # =============================================
+            # OTHER GOVERNMENT JOBS
+            # =============================================
+
+            other_jobs = [
+                job
+                for job in government_jobs
+                if "Other Government Job"
+                in job.get("match", "")
+            ]
+
+            if other_jobs:
+
+                st.markdown(
+                    "## 📋 Other Government Jobs"
+                )
+
+                for job in other_jobs:
+
+                    with st.container(border=True):
+
+                        st.markdown(
+                            f"### 🏛️ {job['title']}"
+                        )
+
+                        st.write(
+                            f"**Organization:** "
+                            f"{job['organization']}"
+                        )
+
+                        st.write(
+                            f"**Appointment:** "
+                            f"{job['method']}"
+                        )
+
+                        st.write(
+                            f"**Last Date:** "
+                            f"{job['last_date']}"
+                        )
+
+                        st.link_button(
+                            "🔗 View Official Vacancy",
+                            job["url"],
+                            use_container_width=True
+                        )
+
+        # -----------------------------------------------------
+        # OFFICIAL PORTALS
+        # -----------------------------------------------------
+
+        st.divider()
+
+        st.markdown(
+            "## 🇮🇳 Official Government Job Portals"
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+
+            st.link_button(
+                "🏛️ Employment News",
+                "https://employmentnews.gov.in/"
+            )
+
+        with col2:
+
+            st.link_button(
+                "🇮🇳 NCS Government Jobs",
+                "https://www.ncs.gov.in/"
+            )
+
+        with col3:
+
+            st.link_button(
+                "📮 India Post",
+                "https://www.indiapost.gov.in/vacancies"
+            )
+
+        st.caption(
+            "⚠️ Always verify qualification, age, "
+            "reservation, deadline and application "
+            "instructions on the official recruitment "
+            "notification before applying."
+        )
 
 
 # =========================================================
-# TAB 3 - FREELANCING
+# TAB 3: FREELANCING
 # =========================================================
 
 with tab_freelance:
 
-    st.subheader(
-        "🌐 Freelancing"
+    st.subheader("🌐 Freelancing & Remote Opportunities")
+
+    st.write(
+        "Find freelance-style and remote opportunities "
+        "matched with your resume skills."
     )
 
-    st.info(
-        "Freelancing integration can be added here "
-        "using a supported freelancing jobs API."
-    )
+    # -----------------------------------------------------
+    # CHECK RESUME
+    # -----------------------------------------------------
+
+    if not st.session_state.get("resume_text"):
+
+        st.warning(
+            "📄 Please upload your resume first so we can "
+            "find opportunities matching your skills."
+        )
+
+    else:
+
+        resume_text = st.session_state.resume_text
+
+        # -------------------------------------------------
+        # FIND FREELANCE / REMOTE JOBS
+        # -------------------------------------------------
+
+        if st.button(
+            "🔎 Find Freelance Jobs For Me",
+            type="primary",
+            use_container_width=True
+        ):
+
+            with st.spinner(
+                "🤖 Finding freelance and remote opportunities "
+                "matching your resume..."
+            ):
+
+                try:
+
+                    # =============================================
+                    # ASK GEMINI FOR SEARCH TAGS
+                    # =============================================
+
+                    skill_prompt = f"""
+Analyze this resume and identify the candidate's
+most useful technical skills for freelance and
+remote jobs.
+
+RESUME:
+{resume_text[:12000]}
+
+Return ONLY a comma-separated list of up to 6
+short English skill keywords.
+
+Examples:
+python, sql, web development, javascript, machine learning
+
+Do not add explanations.
+"""
+
+                    ai_response = generate_ai(
+                        skill_prompt
+                    )
+
+                    skills_text = ai_response.strip()
+
+                    skills = [
+                        skill.strip().lower()
+                        for skill in skills_text.split(",")
+                        if skill.strip()
+                    ]
+
+                    # Keep only first 6 skills
+                    skills = skills[:6]
+
+                    if not skills:
+
+                        skills = [
+                            "python",
+                            "software",
+                            "web development"
+                        ]
+
+                    # =============================================
+                    # REMOTE OK PUBLIC API
+                    # =============================================
+
+                    api_url = "https://remoteok.com/api"
+
+                    response = requests.get(
+                        api_url,
+                        timeout=30,
+                        headers={
+                            "User-Agent":
+                            "AI Job Search Assistant"
+                        }
+                    )
+
+                    response.raise_for_status()
+
+                    data = response.json()
+
+                    freelance_jobs = []
+
+                    # =============================================
+                    # MATCH JOBS USING SKILLS
+                    # =============================================
+
+                    for item in data:
+
+                        # Skip metadata object
+                        if not isinstance(item, dict):
+                            continue
+
+                        title = item.get(
+                            "position",
+                            ""
+                        )
+
+                        company = item.get(
+                            "company",
+                            "Company not specified"
+                        )
+
+                        description = item.get(
+                            "description",
+                            ""
+                        )
+
+                        tags = item.get(
+                            "tags",
+                            []
+                        )
+
+                        job_url = item.get(
+                            "url",
+                            ""
+                        )
+
+                        combined_text = (
+                            f"{title} "
+                            f"{company} "
+                            f"{description} "
+                            f"{' '.join(tags)}"
+                        ).lower()
+
+                        matched_skills = [
+                            skill
+                            for skill in skills
+                            if skill in combined_text
+                        ]
+
+                        if matched_skills:
+
+                            freelance_jobs.append(
+                                {
+                                    "title": title,
+                                    "company": company,
+                                    "description": description,
+                                    "tags": tags,
+                                    "url": job_url,
+                                    "matched_skills":
+                                    matched_skills
+                                }
+                            )
+
+                    # Limit results
+                    freelance_jobs = freelance_jobs[:20]
+
+                    # =============================================
+                    # SAVE RESULTS
+                    # =============================================
+
+                    st.session_state[
+                        "freelance_jobs"
+                    ] = freelance_jobs
+
+                    st.session_state[
+                        "freelance_skills"
+                    ] = skills
+
+                except Exception as e:
+
+                    st.error(
+                        f"Freelance job search error: {e}"
+                    )
+
+        # -----------------------------------------------------
+        # DISPLAY RESULTS
+        # -----------------------------------------------------
+
+        freelance_jobs = st.session_state.get(
+            "freelance_jobs",
+            []
+        )
+
+        freelance_skills = st.session_state.get(
+            "freelance_skills",
+            []
+        )
+
+        if freelance_skills:
+
+            st.info(
+                "🔎 Searching based on your skills: "
+                + ", ".join(freelance_skills)
+            )
+
+        if freelance_jobs:
+
+            st.success(
+                f"Found {len(freelance_jobs)} "
+                "matching
 
 
 # =========================================================
