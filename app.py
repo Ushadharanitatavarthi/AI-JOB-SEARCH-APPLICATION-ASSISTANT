@@ -3029,7 +3029,107 @@ Do not add explanations.
 
             st.success(
                 f"Found {len(freelance_jobs)} "
-                "matching
+                "matching freelance/remote opportunities."
+            )
+
+            for job in freelance_jobs:
+
+                with st.container(border=True):
+
+                    st.markdown(
+                        f"### 💻 {job['title']}"
+                    )
+
+                    st.write(
+                        f"**Company:** {job['company']}"
+                    )
+
+                    if job["matched_skills"]:
+
+                        st.success(
+                            "🎯 Skill Match: "
+                            + ", ".join(
+                                job["matched_skills"]
+                            )
+                        )
+
+                    if job["tags"]:
+
+                        st.write(
+                            "**Skills/Tags:** "
+                            + ", ".join(
+                                job["tags"][:10]
+                            )
+                        )
+
+                    description = (
+                        job["description"]
+                        .replace("<p>", "")
+                        .replace("</p>", "")
+                    )
+
+                    if description:
+
+                        st.write(
+                            description[:600]
+                            + (
+                                "..."
+                                if len(description) > 600
+                                else ""
+                            )
+                        )
+
+                    if job["url"]:
+
+                        st.link_button(
+                            "🔗 View & Apply",
+                            job["url"],
+                            use_container_width=True
+                        )
+
+        elif st.session_state.get(
+            "freelance_jobs"
+        ) == []:
+
+            st.warning(
+                "No matching freelance/remote opportunities "
+                "were found for the detected skills right now."
+            )
+
+        # -----------------------------------------------------
+        # OFFICIAL FREELANCE PLATFORMS
+        # -----------------------------------------------------
+
+        st.divider()
+
+        st.markdown(
+            "## 🌐 Freelance Platforms"
+        )
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.link_button(
+                "💻 Freelancer.com",
+                "https://www.freelancer.com/jobs/",
+                use_container_width=True
+            )
+
+        with col2:
+
+            st.link_button(
+                "🌐 Upwork",
+                "https://www.upwork.com/freelance-jobs/",
+                use_container_width=True
+            )
+
+        st.caption(
+            "💡 Opportunities shown above are matched using "
+            "skills detected from your uploaded resume. "
+            "Always verify the project and client details "
+            "before applying."
+        )
 
 
 # =========================================================
