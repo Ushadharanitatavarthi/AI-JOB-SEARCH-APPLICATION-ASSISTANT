@@ -1319,8 +1319,8 @@ if "selected_job" not in st.session_state:
 st.subheader("📄 Upload Your Resume")
 
 resume = st.file_uploader(
-    "Choose your resume PDF",
-    type=["pdf"],
+    "Choose your resume",
+    type=["pdf", "docx"],
     key="resume_uploader"
 )
 
@@ -1331,20 +1331,44 @@ if resume is not None:
 
     try:
 
-        reader = PdfReader(resume)
-
         resume_text = ""
 
-        for page in reader.pages:
+        # =================================================
+        # PDF RESUME
+        # =================================================
 
-            page_text = page.extract_text()
+        if resume.name.lower().endswith(".pdf"):
 
-            if page_text:
-                resume_text += page_text + "\n"
+            reader = PdfReader(resume)
+
+            for page in reader.pages:
+
+                page_text = page.extract_text()
+
+                if page_text:
+                    resume_text += page_text + "\n"
+
+
+        # =================================================
+        # DOCX RESUME
+        # =================================================
+
+        elif resume.name.lower().endswith(".docx"):
+
+            from docx import Document
+
+            document = Document(resume)
+
+            for paragraph in document.paragraphs:
+
+                if paragraph.text.strip():
+                    resume_text += paragraph.text + "\n"
+
 
         resume_text = resume_text.strip()
 
         st.session_state.resume_text = resume_text
+
 
     except Exception as e:
 
