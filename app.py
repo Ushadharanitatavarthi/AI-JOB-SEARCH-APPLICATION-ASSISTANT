@@ -1194,7 +1194,6 @@
 
 import streamlit as st
 from pypdf import PdfReader
-from docx import document
 import requests
 
 
