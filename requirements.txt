@@ -3,3 +3,4 @@ pypdf
 pandas
 requests
 python-docx
+google-genai
