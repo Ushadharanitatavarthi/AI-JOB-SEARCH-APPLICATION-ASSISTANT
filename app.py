@@ -31,30 +31,67 @@ def generate_ai(prompt):
             "Add it in Streamlit Cloud Secrets."
         )
 
-    try:
+    # Use the configured Gemini model.
+    # If GEMINI_MODEL is not present in Secrets,
+    # the existing model will be used.
+    gemini_model = st.secrets.get(
+        "GEMINI_MODEL",
+        "gemini-3.5-flash-lite"
+    )
 
+    try:
         client = genai.Client(
             api_key=api_key
         )
 
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=prompt
-        )
+        max_attempts = 3
 
-        if not response.text:
-            raise RuntimeError(
-                "Gemini returned an empty response."
-            )
+        for attempt in range(max_attempts):
+            try:
+                response = client.models.generate_content(
+                    model=gemini_model,
+                    contents=prompt
+                )
 
-        return response.text
+                result = getattr(response, "text", None)
+
+                if result and result.strip():
+                    return result.strip()
+
+                raise RuntimeError(
+                    "Gemini returned an empty response."
+                )
+
+            except Exception as e:
+                error_message = str(e)
+
+                temporary_error = any(
+                    code in error_message
+                    for code in [
+                        "429",
+                        "500",
+                        "502",
+                        "503",
+                        "504",
+                        "high demand",
+                        "temporarily unavailable",
+                        "unavailable"
+                    ]
+                )
+
+                if temporary_error and attempt < max_attempts - 1:
+                    wait_time = 2 ** attempt
+                    time.sleep(wait_time)
+                    continue
+
+                raise RuntimeError(
+                    f"Gemini API Error: {error_message}"
+                )
 
     except Exception as e:
-
         raise RuntimeError(
-            f"Gemini API error: {e}"
+            f"Gemini API Error: {e}"
         )
-
 
 # =========================================================
 # APP TITLE
